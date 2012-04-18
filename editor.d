@@ -7,7 +7,7 @@ import std.conv;
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
 import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton;
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
-import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme;
+import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
 import gtk.MenuBar, gtk.Menu, gtk.MenuItem;
 import gtk.FileChooserDialog;
 
@@ -50,6 +50,14 @@ class Editor : MainWindow
 		Label lblTabGirisBaslik = new Label("Kullanıcı Girişi");
 		
 		defter.appendPage(MetinEditoruHazirla("editor.d"), new SayfaBaslik("editor.d", defter));
+
+		//writeln("test");
+		//metinEditoru.getGutter(GtkTextWindowType.RIGHT);
+		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
+		
+		//CellRendererText render = new CellRendererText(); 
+		//gutter.insert(render, 20);
+
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("sekme.d", defter)); 
 		
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("BaskaTest", defter));
@@ -59,14 +67,15 @@ class Editor : MainWindow
 	private Widget MetinEditoruHazirla(string dosyaAdi)
     {
         SourceView metinEditoru = new SourceView();
-        metinEditoru.setShowLineNumbers(true);
         
-        metinEditoru.setInsertSpacesInsteadOfTabs(false);
+        metinEditoru.setShowLineNumbers(true);
+        metinEditoru.setInsertSpacesInsteadOfTabs(true);
         metinEditoru.setTabWidth(4);
         metinEditoru.setHighlightCurrentLine(true);
-        //metinEditoru.setIndentWidth(10);
-    
-        SourceBuffer sb = metinEditoru.getBuffer();
+		metinEditoru.modifyFont("Consolas", 10);
+		metinEditoru.setLeftMargin(10);
+
+	    SourceBuffer sb = metinEditoru.getBuffer();
         if (dosyaAdi != "bos")
         	sb.setText(cast(string)std.file.read(dosyaAdi));
         
@@ -82,8 +91,16 @@ class Editor : MainWindow
         string[] styleSearchPaths = ["E:\\Proje - D\\Divid\\sablon\\styles"];
         sssm.setSearchPath(styleSearchPaths);
 
-        SourceStyleScheme sCheme = sssm.getScheme("oblivion");
-        sb.setStyleScheme(sCheme);
+        SourceStyleScheme sema = sssm.getScheme("oblivion");
+        sb.setStyleScheme(sema);
+
+		//writeln("test");
+		metinEditoru.getGutter(GtkTextWindowType.RIGHT);
+
+		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
+		
+		//CellRendererText render = new CellRendererText(); 
+		//gutter.insert(render, 20);
 
         if (dLang !is null)
         {
@@ -139,15 +156,17 @@ class Editor : MainWindow
 
 		      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.OPEN, a, r);
 		      	//fcd.getFileChooser().setSelectMultiple(true);
-		      	fcd.run();
+		      	//fcd.run();
+
+		      	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
+		      	{
+		      		string dosyaAdresi = fcd.getFilename();
+		      		int gecerliSekmeNo = defter.appendPage(MetinEditoruHazirla(dosyaAdresi), new SayfaBaslik(dosyaAdresi, defter));
+		      		defter.showAll();
+
+		      		defter.setCurrentPage(gecerliSekmeNo);
+		      	}
 		      	fcd.hide();
-
-		      	string dosyaAdresi = fcd.getFilename();
-		      	int gecerliSekmeNo = defter.appendPage(MetinEditoruHazirla(dosyaAdresi), new SayfaBaslik(dosyaAdresi, defter));
-		      	defter.showAll();
-
-		      	defter.setCurrentPage(gecerliSekmeNo);
-		      	
 		      	break;
 
 			case "help.about":
