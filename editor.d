@@ -21,7 +21,7 @@ class Editor : MainWindow
 
 	public this()
 	{
-		super("Divid Metin Editörü (Geliştiriciler için) -- 0.1 (alfa)");
+		super("Divid Metin Editörü (Geliştiriciler için) -- 0.5.3 (Begonya) [ALFA]");
 		EkraniHazirla();
 		setSizeRequest(640, 480);
 		showAll();
@@ -50,18 +50,8 @@ class Editor : MainWindow
 		Label lblTabGirisBaslik = new Label("Kullanıcı Girişi");
 		
 		defter.appendPage(MetinEditoruHazirla("editor.d"), new SayfaBaslik("editor.d", defter));
-
-		//writeln("test");
-		//metinEditoru.getGutter(GtkTextWindowType.RIGHT);
-		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
-		
-		//CellRendererText render = new CellRendererText(); 
-		//gutter.insert(render, 20);
-
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("sekme.d", defter)); 
-		
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("BaskaTest", defter));
-
 	}
 
 	private Widget MetinEditoruHazirla(string dosyaAdi)
@@ -82,6 +72,8 @@ class Editor : MainWindow
         assert(sb !is null, "-> sb null");
 
         ScrolledWindow scWindow = new ScrolledWindow();
+        scWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+        scWindow.setShadowType(GtkShadowType.ETCHED_OUT);
         scWindow.add(metinEditoru);
         
         SourceLanguageManager slm = new SourceLanguageManager();
@@ -95,7 +87,7 @@ class Editor : MainWindow
         sb.setStyleScheme(sema);
 
 		//writeln("test");
-		metinEditoru.getGutter(GtkTextWindowType.RIGHT);
+		//metinEditoru.getGutter(GtkTextWindowType.RIGHT);
 
 		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
 		
@@ -126,6 +118,7 @@ class Editor : MainWindow
 		Menu menu = menuBar.append("_File");;
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_New","file.new"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Open","file.open"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Save","file.save"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Close","file.close"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "E_xit","file.exit"));
 		
@@ -146,7 +139,7 @@ class Editor : MainWindow
 		switch( action )
 		{
 			case "file.new":
-				defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("sekme.d", defter));
+				defter.appendPage(MetinEditoruHazirla("bos"), new SayfaBaslik("Adsiz", defter));
 				defter.showAll();
 				break;
 						
@@ -165,6 +158,37 @@ class Editor : MainWindow
 		      		defter.showAll();
 
 		      		defter.setCurrentPage(gecerliSekmeNo);
+		      	}
+		      	fcd.hide();
+		      	break;
+
+		    case "file.save":
+				string[] a = ["Kaydet", "İptal"];
+      			ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
+
+		      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.SAVE, a, r);
+		      	//fcd.getFileChooser().setSelectMultiple(true);
+		      	//fcd.run();
+
+		      	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
+		      	{
+		      		int sayfaNo = defter.getCurrentPage();
+		      		Widget sayfa = defter.getNthPage(sayfaNo);
+		      		SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
+
+		      		writefln("-> %s, %s", baslik.baslik.getText(), fcd.getFilename());
+
+		      		//SourceBuffer tool = cast(SourceBuffer)defter.getNthPage(sayfaNo);
+
+		      		ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		      		SourceView kaynak = cast(SourceView)text.getChild();
+
+					writefln("-> %s", kaynak.getBuffer().getText());
+
+		      		File dosya = File(fcd.getFilename(), "w");
+				    dosya.writeln(kaynak.getBuffer().getText());
+    
+		      		writeln("save...");
 		      	}
 		      	fcd.hide();
 		      	break;
@@ -272,11 +296,14 @@ public class SayfaBaslik : HBox
 {
 	public ToolButton _kapat;
 	public Notebook _defter;
+	public Label baslik;
+	public static int _sayac;
 
 	public this(string tabEtiketi, Notebook defter)
 	{
 		super(false, 0);
 		_defter = defter;
+
 
 		BaslikHazirla(tabEtiketi);
 	}
@@ -286,10 +313,11 @@ public class SayfaBaslik : HBox
 		Image img = new Image();
 		img.setFromFile("E:\\Proje - D\\Divid\\tab_kapat.png");
 
-		Label baslik = new Label("   " ~ etiket ~ "     ");
+		baslik = new Label("   " ~ etiket ~ "     ");
 
 		_kapat = new ToolButton(img, "");
 		_kapat.addOnClicked(&OnSekmeKapat);
+		_kapat.setData("tabIndex", cast(void*)_sayac);
 
 		packStart(baslik, false, false, 0);
         packStart(_kapat, false, false, 0);
@@ -298,6 +326,9 @@ public class SayfaBaslik : HBox
 
 	private void OnSekmeKapat(ToolButton btn)
 	{
-		_defter.removePage(_defter.getCurrentPage());
+		//int sayfaNo = _defter.pageNum(widget);
+		int sayfaNo = _defter.pageNum(cast(Widget)_kapat.getData("tabIndex"));
+		writeln(sayfaNo);
+		_defter.removePage(sayfaNo);
 	}
 }   
