@@ -7,7 +7,7 @@ import std.string;
 
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
 import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton, gtk.MenuBar, gtk.Menu, gtk.MenuItem, gtk.FileChooserDialog, gtk.TextBuffer;
-import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter;
+import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.FileFilter;
 
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
 import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
@@ -62,12 +62,30 @@ class Editor : MainWindow
 
 	bool keyPerssed(GdkEventKey* e, Widget w)
 	{
-    	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_q)
+    	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_s)
     	{
-        	//ebox.onButtonReleaseEvent(new GdkEventButton);
-        	writeln("Ctrl+Q basildi.");
+        	int sayfaNo = defter.getCurrentPage();
+        	Widget sayfa = defter.getNthPage(sayfaNo);
+			SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
+
+			ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		    SourceView kaynak = cast(SourceView)text.getChild();
+
+			File dosya = File(baslik.DosyaAdresi, "wb");
+			dosya.write(kaynak.getBuffer().getText());
+
+		    writeln("kaydedildi...");
         	return true;
     	}
+
+			int sayfaNo = defter.getCurrentPage();
+			ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		    SourceView kaynak = cast(SourceView)text.getChild();
+    	TextIter iter = new TextIter();
+		kaynak.getBuffer().getIterAtMark(iter, kaynak.getBuffer().getInsert());
+
+		writefln("-> Satir : %s,   Sutun : %s", iter.getLine(), iter.getLineIndex());
+
     	return false;
 		/*
     	switch(event.keyval){
@@ -198,9 +216,21 @@ class Editor : MainWindow
 				string[] a = ["Aç", "İptal"];
       			ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
 		      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.OPEN, a, r);
-		      	//fcd.getFileChooser().setSelectMultiple(true);
-		      	//fcd.run();
+				
+				FileFilter filtreTum = new FileFilter();
+				filtreTum.setName("Tüm Dosyalar (*.*)");
+        		filtreTum.addPattern("*.*");
 
+		      	FileFilter filtreD = new FileFilter();
+        		filtreD.setName("D (*.d, *.di)");
+        		filtreD.addPattern("*.d");
+        		filtreD.addPattern("*.di");
+        		filtreD.addPattern("*.txt");
+        		
+        		fcd.addFilter(filtreTum);
+        		fcd.addFilter(filtreD);
+
+        		fcd.move(50, 50);
 
 		      	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
 		      	{
@@ -236,7 +266,7 @@ class Editor : MainWindow
 
 					writefln("-> %s", kaynak.getBuffer().getText());
 
-		      		File dosya = File(fcd.getFilename(), "w");
+		      		File dosya = File(fcd.getFilename(), "wb");
 				    dosya.write(kaynak.getBuffer().getText());
 
 		      		writeln("save...");
@@ -409,4 +439,8 @@ public class SayfaBaslik : HBox
 		return dosyaAdi;
 	}
 
+	@property string DosyaAdresi() const
+	{
+		return _dosyaAdresi;
+	}
 }
