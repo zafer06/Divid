@@ -9,11 +9,13 @@ import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton;
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
 import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
 import gtk.MenuBar, gtk.Menu, gtk.MenuItem;
-import gtk.FileChooserDialog;
+import gtk.FileChooserDialog, gtk.TextBuffer, gtk.TextIter;
+import gdk.Keysyms;
 
 import gtk.AboutDialog, gtk.MessageDialog;
 
 import gtkc.gdktypes;
+
 
 class Editor : MainWindow
 {
@@ -21,7 +23,7 @@ class Editor : MainWindow
 
 	public this()
 	{
-		super("Divid Metin Editörü (Geliştiriciler için) -- 0.5.3 (Begonya) [ALFA]");
+		super("Divid Metin Editörü (Geliştiriciler için) -- 0.5.3 (Begonya) [BETA]");
 		EkraniHazirla();
 		setSizeRequest(640, 480);
 		showAll();
@@ -41,23 +43,34 @@ class Editor : MainWindow
     	vboxAnaTablo.packStart(getMenuBar, false, false, 0);
     	vboxAnaTablo.packStart(defter, true, true, 2);
     	//vboxAnaTablo.packStart(sekme, true, true, 2);
-    	
     	add(vboxAnaTablo);
-		
+
 		Frame frame = new Frame("Kullanıcı Girişi");
 		frame.setSizeRequest(100, 300);
 
 		Label lblTabGirisBaslik = new Label("Kullanıcı Girişi");
-		
+
 		defter.appendPage(MetinEditoruHazirla("editor.d"), new SayfaBaslik("editor.d", defter));
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("sekme.d", defter)); 
 		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("BaskaTest", defter));
 	}
 
+	bool keyPerssed(GdkEventKey* e, Widget w)
+	{
+    	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_q)
+    	{
+        	//ebox.onButtonReleaseEvent(new GdkEventButton);
+        	writeln("Ctrl+Q basildi.");
+        	return true;
+    	}
+    	return false;
+	}
+
 	private Widget MetinEditoruHazirla(string dosyaAdi)
     {
         SourceView metinEditoru = new SourceView();
-        
+		metinEditoru.addOnKeyPress(&keyPerssed); 
+
         metinEditoru.setShowLineNumbers(true);
         metinEditoru.setInsertSpacesInsteadOfTabs(true);
         metinEditoru.setTabWidth(4);
@@ -66,16 +79,18 @@ class Editor : MainWindow
 		metinEditoru.setLeftMargin(10);
 
 	    SourceBuffer sb = metinEditoru.getBuffer();
+	    sb.addOnChanged(&OnMetinDegisti);
+	    
         if (dosyaAdi != "bos")
         	sb.setText(cast(string)std.file.read(dosyaAdi));
-        
+
         assert(sb !is null, "-> sb null");
 
         ScrolledWindow scWindow = new ScrolledWindow();
         scWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
         scWindow.setShadowType(GtkShadowType.ETCHED_OUT);
         scWindow.add(metinEditoru);
-        
+       
         SourceLanguageManager slm = new SourceLanguageManager();
         SourceLanguage dLang = slm.getLanguage("d");
 
@@ -88,9 +103,8 @@ class Editor : MainWindow
 
 		//writeln("test");
 		//metinEditoru.getGutter(GtkTextWindowType.RIGHT);
-
 		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
-		
+
 		//CellRendererText render = new CellRendererText(); 
 		//gutter.insert(render, 20);
 
@@ -100,16 +114,14 @@ class Editor : MainWindow
             sb.setLanguage(dLang);
             sb.setHighlightSyntax(true);
         }
-        
+
         //sourceView.modifyFont("Courier", 9);
         //metinEditoru.setRightMarginPosition(72);
         //metinEditoru.setShowRightMargin(true);
         metinEditoru.setAutoIndent(true);
-        
-        
+
         return scWindow;
     }
-
 
 	MenuBar getMenuBar()
 	{
@@ -121,16 +133,29 @@ class Editor : MainWindow
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Save","file.save"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Close","file.close"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "E_xit","file.exit"));
-		
-		
+
 		menu = menuBar.append("_Edit");
 		menu.append(new MenuItem(&OnMenuKomutuCalistir,"_Find","edit.find"));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir,"_Search","edit.search"));
 
 		menu = menuBar.append("_Help");
 		menu.append(new MenuItem(&OnMenuKomutuCalistir,"_About","help.about"));
-		
+
 		return menuBar;
+	}
+
+	void OnMetinDegisti(TextBuffer textBuffer)
+	{
+		/*
+		TextIter iter = new TextIter();
+		textBuffer.getIterAtMark(iter, textBuffer.getInsert());
+		int lineNumber = iter.getLine(); 
+		*/
+
+		TextIter iter = new TextIter();
+		textBuffer.getIterAtMark(iter, textBuffer.getInsert());
+
+		writefln("-> Satir : %s,   Sutun : %s", iter.getLine(), iter.getLineIndex());
 	}
 
 	void OnMenuKomutuCalistir(MenuItem menuItem)
@@ -142,21 +167,20 @@ class Editor : MainWindow
 				defter.appendPage(MetinEditoruHazirla("bos"), new SayfaBaslik("Adsiz", defter));
 				defter.showAll();
 				break;
-						
+
 			case "file.open":
 				string[] a = ["Aç", "İptal"];
       			ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
-
 		      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.OPEN, a, r);
 		      	//fcd.getFileChooser().setSelectMultiple(true);
 		      	//fcd.run();
+
 
 		      	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
 		      	{
 		      		string dosyaAdresi = fcd.getFilename();
 		      		int gecerliSekmeNo = defter.appendPage(MetinEditoruHazirla(dosyaAdresi), new SayfaBaslik(dosyaAdresi, defter));
 		      		defter.showAll();
-
 		      		defter.setCurrentPage(gecerliSekmeNo);
 		      	}
 		      	fcd.hide();
@@ -165,8 +189,8 @@ class Editor : MainWindow
 		    case "file.save":
 				string[] a = ["Kaydet", "İptal"];
       			ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
-
 		      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.SAVE, a, r);
+
 		      	//fcd.getFileChooser().setSelectMultiple(true);
 		      	//fcd.run();
 
@@ -186,8 +210,8 @@ class Editor : MainWindow
 					writefln("-> %s", kaynak.getBuffer().getText());
 
 		      		File dosya = File(fcd.getFilename(), "w");
-				    dosya.writeln(kaynak.getBuffer().getText());
-    
+				    dosya.write(kaynak.getBuffer().getText());
+
 		      		writeln("save...");
 		      	}
 		      	fcd.hide();
@@ -195,6 +219,7 @@ class Editor : MainWindow
 
 			case "help.about":
 				(new AboutDialog()).showAll();
+
 //				MessageDialog d = new MessageDialog(
 //						this,
 //						GtkDialogFlags.MODAL,
@@ -216,6 +241,7 @@ class Editor : MainWindow
 //				d.run();
 //				d.destroy();
 				break;
+
 			default:
 				MessageDialog d = new MessageDialog(
 					this, 
@@ -227,12 +253,19 @@ class Editor : MainWindow
 				d.destroy();
 			break;
 		}
-
 	}
+
 
 	void OnSekmeDegisti(void *sekme, uint sekmeNo, Notebook defter)
 	{
-		writefln("Notebook switch to page %s", sekmeNo);
+
+		int sayfaNo = defter.getCurrentPage();
+		ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		SourceView kaynak = cast(SourceView)text.getChild();
+		SourceBuffer sb = kaynak.getBuffer();
+
+		writefln("Notebook switch to page %s, %s", sekmeNo, sb.getModified());
+
 		// fullCollect helps finding objects that shouldn't have been collected\r
 		//std.gc.fullCollect();
 
@@ -244,7 +277,7 @@ class Editor : MainWindow
 	private Widget AnaMenuHazirla()
     {
     	MenuBar menuBar = new MenuBar();   // name is self explanatory
-		
+
     	Menu mnDosya = menuBar.append("_Dosya");
     	mnDosya.append(new MenuItem("Yeni                      Ctrl+Y"));
     	mnDosya.append(new MenuItem("Aç"));
@@ -256,23 +289,18 @@ class Editor : MainWindow
 
     	/*
 		Menu menu;      // idem
-	    
     	menu = menubar.append("_Dosya");
     	menu = menubar.append("_Düzen");
     	menu = menubar.append("_Görünüm");
-    	menu.append(new MenuItem("Deneme"));
+	   	menu.append(new MenuItem("Deneme"));
 		//menu.append(new MenuItem(&myMenuItemListener, "E_xit"));
-    
 
     	//menu.append(new MenuItem(myMenuItemListener, "E_xit","file.exit"));
-
     	return menubar;
-
     	/*
 		Button btnKapat = new Button();
 		btnKapat.setLabel("< Kapat >");
 		btnKapat.addOnClicked(&ProgramiKapat);
-
 		return btnKapat;
 		*/
     }
@@ -282,13 +310,13 @@ class Editor : MainWindow
 		//
 	}
 
-	
-
 	private void ProgramiKapat(Button btn)
 	{
 		Main.quit();
 	}
 }
+
+
 
 //=========================================================================================================
 
@@ -304,7 +332,6 @@ public class SayfaBaslik : HBox
 		super(false, 0);
 		_defter = defter;
 
-
 		BaslikHazirla(tabEtiketi);
 	}
 
@@ -314,6 +341,7 @@ public class SayfaBaslik : HBox
 		img.setFromFile("E:\\Proje - D\\Divid\\tab_kapat.png");
 
 		baslik = new Label("   " ~ etiket ~ "     ");
+		baslik.setSelectable(0);
 
 		_kapat = new ToolButton(img, "");
 		_kapat.addOnClicked(&OnSekmeKapat);
@@ -330,5 +358,7 @@ public class SayfaBaslik : HBox
 		int sayfaNo = _defter.pageNum(cast(Widget)_kapat.getData("tabIndex"));
 		writeln(sayfaNo);
 		_defter.removePage(sayfaNo);
+
 	}
+
 }   
