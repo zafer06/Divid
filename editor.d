@@ -3,16 +3,16 @@ module editor;
 import std.stdio;
 import std.file;
 import std.conv;
+import std.string;
 
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
-import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton;
+import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton, gtk.MenuBar, gtk.Menu, gtk.MenuItem, gtk.FileChooserDialog, gtk.TextBuffer;
+import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter;
+
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
 import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
-import gtk.MenuBar, gtk.Menu, gtk.MenuItem;
-import gtk.FileChooserDialog, gtk.TextBuffer, gtk.TextIter;
-import gdk.Keysyms;
 
-import gtk.AboutDialog, gtk.MessageDialog;
+import gdk.Keysyms;
 
 import gtkc.gdktypes;
 
@@ -50,9 +50,14 @@ class Editor : MainWindow
 
 		Label lblTabGirisBaslik = new Label("Kullanıcı Girişi");
 
-		defter.appendPage(MetinEditoruHazirla("editor.d"), new SayfaBaslik("editor.d", defter));
-		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("sekme.d", defter)); 
-		defter.appendPage(MetinEditoruHazirla("sekme.d"), new SayfaBaslik("BaskaTest", defter));
+		Widget sayfa = MetinEditoruHazirla("editor.d");
+		defter.appendPage(sayfa, new SayfaBaslik("editor.d", defter, sayfa));
+
+		Widget sayfa1 = MetinEditoruHazirla("sekme.d");
+		defter.appendPage(sayfa1, new SayfaBaslik("sekme.d", defter, sayfa1)); 
+
+		Widget sayfa2 = MetinEditoruHazirla("sekme.d");
+		defter.appendPage(sayfa2, new SayfaBaslik("BaskaTest", defter, sayfa2));
 	}
 
 	bool keyPerssed(GdkEventKey* e, Widget w)
@@ -64,6 +69,26 @@ class Editor : MainWindow
         	return true;
     	}
     	return false;
+		/*
+    	switch(event.keyval){
+                case(GdkKeysyms.GDK_Up):    // up arrow
+                    Stdout("up").nl;
+                    break;
+                case(GdkKeysyms.GDK_Down): // down arrow
+                    Stdout("down").nl;
+                    break;
+                case(GdkKeysyms.GDK_Right): // right arrow
+                    Stdout("right").nl;
+                    break;
+                case(GdkKeysyms.GDK_Left):  // left arrow
+                    Stdout("left").nl;
+                    break;
+                default:
+                    Stdout("default").nl;
+                    break;
+            }
+            return false; 
+            */
 	}
 
 	private Widget MetinEditoruHazirla(string dosyaAdi)
@@ -164,7 +189,8 @@ class Editor : MainWindow
 		switch( action )
 		{
 			case "file.new":
-				defter.appendPage(MetinEditoruHazirla("bos"), new SayfaBaslik("Adsiz", defter));
+				Widget sayfa = MetinEditoruHazirla("bos");
+				defter.appendPage(sayfa, new SayfaBaslik("Adsiz", defter, sayfa));
 				defter.showAll();
 				break;
 
@@ -179,7 +205,8 @@ class Editor : MainWindow
 		      	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
 		      	{
 		      		string dosyaAdresi = fcd.getFilename();
-		      		int gecerliSekmeNo = defter.appendPage(MetinEditoruHazirla(dosyaAdresi), new SayfaBaslik(dosyaAdresi, defter));
+		      		Widget sayfa = MetinEditoruHazirla(dosyaAdresi);
+		      		int gecerliSekmeNo = defter.appendPage(sayfa, new SayfaBaslik(dosyaAdresi, defter, sayfa));
 		      		defter.showAll();
 		      		defter.setCurrentPage(gecerliSekmeNo);
 		      	}
@@ -325,40 +352,61 @@ public class SayfaBaslik : HBox
 	public ToolButton _kapat;
 	public Notebook _defter;
 	public Label baslik;
-	public static int _sayac;
+	private string _dosyaAdresi;
+	private static int test;
 
-	public this(string tabEtiketi, Notebook defter)
+	public this(string tabEtiketi, Notebook defter, Widget sayfa)
 	{
 		super(false, 0);
 		_defter = defter;
+		_dosyaAdresi = tabEtiketi;
 
-		BaslikHazirla(tabEtiketi);
+		++test;
+
+		BaslikHazirla(tabEtiketi, sayfa);
 	}
 
-	private void BaslikHazirla(string etiket)
+	private void BaslikHazirla(string etiket, Widget sayfa)
 	{
 		Image img = new Image();
 		img.setFromFile("E:\\Proje - D\\Divid\\tab_kapat.png");
 
-		baslik = new Label("   " ~ etiket ~ "     ");
+		baslik = new Label("   " ~ DosyaAdiDuzenle(etiket) ~ "     ");
 		baslik.setSelectable(0);
 
 		_kapat = new ToolButton(img, "");
 		_kapat.addOnClicked(&OnSekmeKapat);
-		_kapat.setData("tabIndex", cast(void*)_sayac);
+		//_kapat.setLabel(to!string(_defter.getNPages()));
+		
+		//Widget sayfa = _defter.getNthPage(_defter.getNPages());
+		_kapat.setData("tabIndex", cast(void*)sayfa);
 
-		packStart(baslik, false, false, 0);
-        packStart(_kapat, false, false, 0);
-        showAll();
+
+
+		this.packStart(baslik, false, false, 0);
+        this.packStart(_kapat, false, false, 0);
+        this.showAll();
 	}
 
 	private void OnSekmeKapat(ToolButton btn)
 	{
-		//int sayfaNo = _defter.pageNum(widget);
-		int sayfaNo = _defter.pageNum(cast(Widget)_kapat.getData("tabIndex"));
-		writeln(sayfaNo);
+		int sayfaNo = _defter.pageNum(cast(Widget)btn.getData("tabIndex"));
 		_defter.removePage(sayfaNo);
-
 	}
 
-}   
+	private string DosyaAdiDuzenle(string dosyaAdresi)
+	{
+		string dosyaAdi = dosyaAdresi;
+
+		int sonAyracKonumu = lastIndexOf(dosyaAdresi, '\\');
+
+		if (sonAyracKonumu > 0)
+		{
+			dosyaAdi = dosyaAdresi[sonAyracKonumu + 1 .. dosyaAdresi.length];
+			dosyaAdi = leftJustify(dosyaAdi, 15, ' ');
+		}
+
+		return dosyaAdi;
+	}
+
+}
