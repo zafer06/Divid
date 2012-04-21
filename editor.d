@@ -1,4 +1,4 @@
-module editor;
+module Editor;
 
 import std.stdio;
 import std.file;
