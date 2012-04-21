@@ -7,7 +7,7 @@ import std.string;
 
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
 import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton, gtk.MenuBar, gtk.Menu, gtk.MenuItem, gtk.FileChooserDialog, gtk.TextBuffer;
-import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.FileFilter;
+import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.FileFilter, gtk.Statusbar;
 
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
 import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
@@ -20,6 +20,7 @@ import gtkc.gdktypes;
 class Editor : MainWindow
 {
 	private Notebook defter;
+	private Statusbar durumCubugu;
 
 	public this()
 	{
@@ -39,17 +40,16 @@ class Editor : MainWindow
 		defter.setTabPos(PositionType.TOP);
 		//sekme.setBorderWidth(10);
 
+		durumCubugu = new Statusbar();
+		durumCubugu.push(1, "First message");
+
 		VBox vboxAnaTablo = new VBox(false, 0);
     	vboxAnaTablo.packStart(getMenuBar, false, false, 0);
-    	vboxAnaTablo.packStart(defter, true, true, 2);
-    	//vboxAnaTablo.packStart(sekme, true, true, 2);
+    	vboxAnaTablo.packStart(defter, true, true, 0);
+    	vboxAnaTablo.packStart(durumCubugu, false, false, 0);
     	add(vboxAnaTablo);
 
-		Frame frame = new Frame("Kullanıcı Girişi");
-		frame.setSizeRequest(100, 300);
-
-		Label lblTabGirisBaslik = new Label("Kullanıcı Girişi");
-
+    	/*	
 		Widget sayfa = MetinEditoruHazirla("editor.d");
 		defter.appendPage(sayfa, new SayfaBaslik("editor.d", defter, sayfa));
 
@@ -58,33 +58,41 @@ class Editor : MainWindow
 
 		Widget sayfa2 = MetinEditoruHazirla("sekme.d");
 		defter.appendPage(sayfa2, new SayfaBaslik("BaskaTest", defter, sayfa2));
+		*/
 	}
 
-	bool keyPerssed(GdkEventKey* e, Widget w)
+	private bool keyPerssed(GdkEventKey* e, Widget w)
 	{
+		int sayfaNo = defter.getCurrentPage();
+		ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		SourceView kaynak = cast(SourceView)text.getChild();
+    	TextIter iter = new TextIter();
+		kaynak.getBuffer().getIterAtMark(iter, kaynak.getBuffer().getInsert());
+
+		string konumBilgi = format("Satir : %s, Sutun : %s", iter.getLine(), iter.getLineIndex());
+
+
     	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_s)
     	{
-        	int sayfaNo = defter.getCurrentPage();
+        	//int sayfaNo = defter.getCurrentPage();
         	Widget sayfa = defter.getNthPage(sayfaNo);
 			SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
 
-			ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
-		    SourceView kaynak = cast(SourceView)text.getChild();
+			//ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		    //SourceView kaynak = cast(SourceView)text.getChild();
 
 			File dosya = File(baslik.DosyaAdresi, "wb");
 			dosya.write(kaynak.getBuffer().getText());
 
 		    writeln("kaydedildi...");
+		    konumBilgi = konumBilgi ~ ";Dosya kaydedildi...";
+		    durumCubugu.push(2, konumBilgi);
         	return true;
     	}
 
-			int sayfaNo = defter.getCurrentPage();
-			ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
-		    SourceView kaynak = cast(SourceView)text.getChild();
-    	TextIter iter = new TextIter();
-		kaynak.getBuffer().getIterAtMark(iter, kaynak.getBuffer().getInsert());
+		writefln(konumBilgi);
 
-		writefln("-> Satir : %s,   Sutun : %s", iter.getLine(), iter.getLineIndex());
+		durumCubugu.push(2, konumBilgi);
 
     	return false;
 		/*
@@ -138,7 +146,7 @@ class Editor : MainWindow
         SourceLanguage dLang = slm.getLanguage("d");
 
  		SourceStyleSchemeManager sssm = new SourceStyleSchemeManager();
-        string[] styleSearchPaths = ["E:\\Proje - D\\Divid\\sablon\\styles"];
+        string[] styleSearchPaths = ["sablon\\styles"];
         sssm.setSearchPath(styleSearchPaths);
 
         SourceStyleScheme sema = sssm.getScheme("oblivion");
@@ -170,12 +178,12 @@ class Editor : MainWindow
 	{
 		MenuBar menuBar = new MenuBar();
 
-		Menu menu = menuBar.append("_File");;
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_New","file.new"));
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Open","file.open"));
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Save","file.save"));
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "_Close","file.close"));
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "E_xit","file.exit"));
+		Menu menu = menuBar.append("_Dosya");;
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Yeni", "dosya.yeni"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Aç", "dosya.ac"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Kaydet", "dosya.kaydet"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Farklı Kaydet", "dosya.farkliKaydet"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Çıkış", "dosya.cikis"));
 
 		menu = menuBar.append("_Edit");
 		menu.append(new MenuItem(&OnMenuKomutuCalistir,"_Find","edit.find"));
@@ -399,7 +407,7 @@ public class SayfaBaslik : HBox
 	private void BaslikHazirla(string etiket, Widget sayfa)
 	{
 		Image img = new Image();
-		img.setFromFile("E:\\Proje - D\\Divid\\tab_kapat.png");
+		img.setFromFile("resim\\tab_kapat.png");
 
 		baslik = new Label("   " ~ DosyaAdiDuzenle(etiket) ~ "     ");
 		baslik.setSelectable(0);
