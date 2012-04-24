@@ -8,17 +8,15 @@ public class SayfaBaslik : HBox
 {
 	public ToolButton _kapat;
 	public Notebook _defter;
-	public Label baslik;
+	private Label lblDosyaAdi;
+	private string _dosyaAdi;
 	private string _dosyaAdresi;
-	private static int test;
 
 	public this(string tabEtiketi, Notebook defter, Widget sayfa)
 	{
 		super(false, 0);
 		_defter = defter;
 		_dosyaAdresi = tabEtiketi;
-
-		++test;
 
 		BaslikHazirla(tabEtiketi, sayfa);
 	}
@@ -28,19 +26,18 @@ public class SayfaBaslik : HBox
 		Image img = new Image();
 		img.setFromFile("resim\\tab_kapat.png");
 
-		baslik = new Label("   " ~ DosyaAdiDuzenle(etiket) ~ "     ");
-		baslik.setSelectable(0);
+		_dosyaAdi = DosyaAdiDuzenle(etiket);
+		lblDosyaAdi = new Label("   " ~ _dosyaAdi ~ "     ");
+
 
 		_kapat = new ToolButton(img, "");
 		_kapat.addOnClicked(&OnSekmeKapat);
 		//_kapat.setLabel(to!string(_defter.getNPages()));
-		
-		//Widget sayfa = _defter.getNthPage(_defter.getNPages());
 		_kapat.setData("tabIndex", cast(void*)sayfa);
 
 
 
-		this.packStart(baslik, false, false, 0);
+		this.packStart(lblDosyaAdi, false, false, 0);
         this.packStart(_kapat, false, false, 0);
         this.showAll();
 	}
@@ -66,8 +63,21 @@ public class SayfaBaslik : HBox
 		return dosyaAdi;
 	}
 
-	@property string DosyaAdresi() const
+	@property string VerDosyaAdresi() const
 	{
 		return _dosyaAdresi;
+	}
+
+	@property void 	YapDosyaAdresi(string dosyaAdresi)
+	{
+		_dosyaAdresi = dosyaAdresi;
+		_dosyaAdi = "   " ~ DosyaAdiDuzenle(_dosyaAdresi) ~ "     ";
+		
+		lblDosyaAdi.setText(_dosyaAdi);
+	}
+
+	@property string VerDosyaAdi() const
+	{
+		return _dosyaAdi;
 	}
 }

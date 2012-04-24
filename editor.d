@@ -26,6 +26,10 @@ class Editor : MainWindow
 	public this()
 	{
 		super("Divid Metin Editörü (Geliştiriciler için) -- 0.5.3 (Begonya) [BETA]");
+		this.setIconFromFile("resim\\tab_kapat2.png");
+		//this.resize(300, 300);
+		//this.move(20, 20);
+
 		EkraniHazirla();
 		setSizeRequest(640, 480);
 		showAll();
@@ -75,15 +79,7 @@ class Editor : MainWindow
 
     	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_s)
     	{
-        	//int sayfaNo = defter.getCurrentPage();
-        	Widget sayfa = defter.getNthPage(sayfaNo);
-			SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
-
-			//ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
-		    //SourceView kaynak = cast(SourceView)text.getChild();
-
-			File dosya = File(baslik.DosyaAdresi, "wb");
-			dosya.write(kaynak.getBuffer().getText());
+    		MenuDosyaKaydet();
 
 		    writeln("kaydedildi...");
 		    konumBilgi = konumBilgi ~ ";Dosya kaydedildi...";
@@ -199,12 +195,13 @@ class Editor : MainWindow
 	}
 
 
+
 	/*======================================================= MENU KOMUT METOTLARI BASI =============================*/
 	
 	private void MenuDosyaYeni()
 	{
 		Widget sayfa = MetinEditoruHazirla("bos");
-		defter.appendPage(sayfa, new SayfaBaslik("Adsiz", defter, sayfa));
+		defter.appendPage(sayfa, new SayfaBaslik("Adsız", defter, sayfa));
 		defter.showAll();
 	}
 
@@ -242,6 +239,29 @@ class Editor : MainWindow
 	
 	private void MenuDosyaKaydet()
 	{
+		int sayfaNo = defter.getCurrentPage();
+      	Widget sayfa = defter.getNthPage(sayfaNo);
+		SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
+
+		ScrolledWindow disPencere = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+		SourceView editor = cast(SourceView)disPencere.getChild();
+
+		if (baslik.VerDosyaAdi != "Adsız")
+		{
+			File dosya = File(baslik.VerDosyaAdresi, "wb");
+		    dosya.write(editor.getBuffer().getText());
+
+	    	writefln("-> K ->Kaydedildi... %s", baslik.VerDosyaAdresi);
+		}
+		else
+		{
+			MenuDosyaFarkliKaydet();
+		}
+
+	}
+
+	private void MenuDosyaFarkliKaydet()
+	{
         string[] a = ["Kaydet", "İptal"];
 	    ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
       	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.SAVE, a, r);
@@ -252,20 +272,17 @@ class Editor : MainWindow
       		Widget sayfa = defter.getNthPage(sayfaNo);
       		SayfaBaslik baslik = cast(SayfaBaslik)defter.getTabLabel(sayfa);
 
-      		writefln("-> %s, %s", baslik.baslik.getText(), fcd.getFilename());
-
-      		//SourceBuffer tool = cast(SourceBuffer)defter.getNthPage(sayfaNo);
-
-      		ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
-      		SourceView kaynak = cast(SourceView)text.getChild();
-
-		    writefln("-> %s", kaynak.getBuffer().getText());
+      		ScrolledWindow disPencere = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
+      		SourceView editor = cast(SourceView)disPencere.getChild();
 
       		File dosya = File(fcd.getFilename(), "wb");
-	        dosya.write(kaynak.getBuffer().getText());
+	        dosya.write(editor.getBuffer().getText());
 
-      		writeln("save...");
+	        baslik.YapDosyaAdresi(fcd.getFilename());
+
+	        writefln("-> FK -> Kaydedildi... %s", baslik.VerDosyaAdresi);
       	}
+
       	fcd.hide();  
 	}
 
@@ -281,6 +298,11 @@ class Editor : MainWindow
 		d.destroy();
 	}
 	
+	private void MenuDosyaCikis()
+	{
+		Main.quit;
+	}
+
 	/*======================================================= MENU KOMUT METOTLARI SONU =============================*/	
 		
 
@@ -299,8 +321,16 @@ class Editor : MainWindow
 				MenuDosyaAc();
 		      	break;
 
-		    case "file.save":
+		    case "dosya.kaydet":
                 MenuDosyaKaydet();
+		      	break;
+
+			case "dosya.farkliKaydet":
+                MenuDosyaFarkliKaydet();
+		      	break;
+
+			case "dosya.cikis":
+                MenuDosyaCikis();
 		      	break;
 
 			case "yardim.hakkinda":
@@ -328,7 +358,7 @@ class Editor : MainWindow
 		SourceView kaynak = cast(SourceView)text.getChild();
 		SourceBuffer sb = kaynak.getBuffer();
 
-		writefln("Notebook switch to page %s, %s", sekmeNo, sb.getModified());
+		//writefln("Notebook switch to page %s, %s", sekmeNo, sb.getModified());
 
 		// fullCollect helps finding objects that shouldn't have been collected\r
 		//std.gc.fullCollect();
@@ -357,14 +387,4 @@ class Editor : MainWindow
 		writefln("-> Satir : %s,   Sutun : %s", iter.getLine(), iter.getLineIndex());
 	}
 	/*======================================================= OLAY METODLARI SONU =============================*/	
-	
-	private void ProgramiKapat(Button btn)
-	{
-		Main.quit();
-	}
 }
-
-
-
-//=========================================================================================================
-

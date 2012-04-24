@@ -3,6 +3,7 @@
 #
 # Compiler : Digital Mars D (v2.058)
 #
+# -L/SUBSYSTEM:WINDOWS - Konsol ekranını gizle
 
 all : divid.exe
 
