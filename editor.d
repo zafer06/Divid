@@ -7,16 +7,26 @@ import std.string;
 
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
 import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton, gtk.MenuBar, gtk.Menu, gtk.MenuItem, gtk.FileChooserDialog, gtk.TextBuffer;
-import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.FileFilter, gtk.Statusbar;
+import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.TextMark, gtk.FileFilter, gtk.Statusbar, gtk.TextView;
 
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
-import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;;
+import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;
 
 import gdk.Keysyms;
 
 import gtkc.gdktypes;
 
 import SayfaBaslik;
+
+version (Windows)
+{
+	enum logoDosyaAdresi = "resim\\logo.png";
+}
+
+version (Linux)
+{
+	enum logoDosyaAdresi = "resim/logo.png";	
+}
 
 class Editor : MainWindow
 {
@@ -26,7 +36,9 @@ class Editor : MainWindow
 	public this()
 	{
 		super("Divid Metin Editörü (Geliştiriciler için) -- 0.5.3 (Begonya) [BETA]");
-		this.setIconFromFile("resim\\tab_kapat2.png");
+		this.setIconFromFile(logoDosyaAdresi);
+  		//this.setIcon(createPixbuf("resim\\logo.png"));
+
 		//this.resize(300, 300);
 		//this.move(20, 20);
 
@@ -48,13 +60,14 @@ class Editor : MainWindow
 		durumCubugu = new Statusbar();
 		durumCubugu.push(1, "First message");
 
+
 		VBox vboxAnaTablo = new VBox(false, 0);
     	vboxAnaTablo.packStart(AnaMenuHazirla, false, false, 0);
     	vboxAnaTablo.packStart(defter, true, true, 0);
     	vboxAnaTablo.packStart(durumCubugu, false, false, 0);
     	add(vboxAnaTablo);
 
-    	/*	
+ 		/*   	
 		Widget sayfa = MetinEditoruHazirla("editor.d");
 		defter.appendPage(sayfa, new SayfaBaslik("editor.d", defter, sayfa));
 
@@ -68,28 +81,11 @@ class Editor : MainWindow
 
 	private bool keyPerssed(GdkEventKey* e, Widget w)
 	{
-		int sayfaNo = defter.getCurrentPage();
-		ScrolledWindow text = cast(ScrolledWindow)defter.getNthPage(sayfaNo);
-		SourceView kaynak = cast(SourceView)text.getChild();
-    	TextIter iter = new TextIter();
-		kaynak.getBuffer().getIterAtMark(iter, kaynak.getBuffer().getInsert());
-
-		string konumBilgi = format("Satir : %s, Sutun : %s", iter.getLine(), iter.getLineIndex());
-
-
-    	if (e.state == ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_s)
+    	if (e.state & ModifierType.CONTROL_MASK && e.keyval ==  GdkKeysyms.GDK_s)
     	{
     		MenuDosyaKaydet();
-
-		    writeln("kaydedildi...");
-		    konumBilgi = konumBilgi ~ ";Dosya kaydedildi...";
-		    durumCubugu.push(2, konumBilgi);
         	return true;
     	}
-
-		writefln(konumBilgi);
-
-		durumCubugu.push(2, konumBilgi);
 
     	return false;
 		/*
@@ -114,7 +110,6 @@ class Editor : MainWindow
             */
 	}
 
-	
 	private Widget MetinEditoruHazirla(string dosyaAdi)
 	{
 	    SourceView metinEditoru = new SourceView();
@@ -127,13 +122,20 @@ class Editor : MainWindow
 		metinEditoru.modifyFont("Consolas", 10);
 		metinEditoru.setLeftMargin(10);
 
+
 	    SourceBuffer sb = metinEditoru.getBuffer();
 	    sb.addOnChanged(&OnMetinDegisti);
-	    
-	    if (dosyaAdi != "bos")
-	    	sb.setText(cast(string)std.file.read(dosyaAdi));
+	    sb.addOnMarkSet(&OnMarkSet);
 
-	    assert(sb !is null, "-> sb null");
+	    if (dosyaAdi != "bos")
+	    {
+	    	sb.setText(cast(string)std.file.read(dosyaAdi));
+		}
+
+	     // Imleci satır başına taşı
+        TextIter iter = new TextIter();
+        sb.getStartIter(iter);
+        sb.placeCursor(iter);
 
 	    ScrolledWindow scWindow = new ScrolledWindow();
 	    scWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
@@ -141,13 +143,17 @@ class Editor : MainWindow
 	    scWindow.add(metinEditoru);
 	   
 	    SourceLanguageManager slm = new SourceLanguageManager();
+	    slm.setSearchPath(["share\\gtksourceview-2.0\\language-specs"]);
+
 	    SourceLanguage dLang = slm.getLanguage("d");
 
+	    //writeln(slm.getSearchPath());
+
 		SourceStyleSchemeManager sssm = new SourceStyleSchemeManager();
-	    string[] styleSearchPaths = ["sablon\\styles"];
+	    string[] styleSearchPaths = ["share\\gtksourceview-2.0\\styles"];
 	    sssm.setSearchPath(styleSearchPaths);
 
-	    SourceStyleScheme sema = sssm.getScheme("oblivion");
+	    SourceStyleScheme sema = sssm.getScheme("classic");
 	    sb.setStyleScheme(sema);
 
 		//writeln("test");
@@ -160,8 +166,9 @@ class Editor : MainWindow
 	    if (dLang !is null)
 	    {
 	        writefln("Setting language to D");
-	        sb.setLanguage(dLang);
-	        sb.setHighlightSyntax(true);
+	        
+        	sb.setLanguage(dLang);
+			sb.setHighlightSyntax(true);
 	    }
 
 	    //sourceView.modifyFont("Courier", 9);
@@ -201,8 +208,15 @@ class Editor : MainWindow
 	private void MenuDosyaYeni()
 	{
 		Widget sayfa = MetinEditoruHazirla("bos");
-		defter.appendPage(sayfa, new SayfaBaslik("Adsız", defter, sayfa));
+		int gecerliSekmeNo = defter.appendPage(sayfa, new SayfaBaslik("Adsız", defter, sayfa));
+
 		defter.showAll();
+		defter.setCurrentPage(gecerliSekmeNo);
+
+		// İmleci editöre konumla
+		ScrolledWindow text = cast(ScrolledWindow)sayfa;
+		TextView editor = cast(TextView)text.getChild();
+		editor.grabFocus();
 	}
 
 	private void MenuDosyaAc()
@@ -233,6 +247,11 @@ class Editor : MainWindow
       		int gecerliSekmeNo = defter.appendPage(sayfa, new SayfaBaslik(dosyaAdresi, defter, sayfa));
       		defter.showAll();
       		defter.setCurrentPage(gecerliSekmeNo);
+			
+			// İmleci editöre konumla
+			ScrolledWindow text = cast(ScrolledWindow)sayfa;
+			TextView editor = cast(TextView)text.getChild();
+			editor.grabFocus();
       	}
       	fcd.hide();
 	}
@@ -250,8 +269,7 @@ class Editor : MainWindow
 		{
 			File dosya = File(baslik.VerDosyaAdresi, "wb");
 		    dosya.write(editor.getBuffer().getText());
-
-	    	writefln("-> K ->Kaydedildi... %s", baslik.VerDosyaAdresi);
+     		durumCubugu.push(0, " Kaydedildi..." ~ baslik.VerDosyaAdresi);
 		}
 		else
 		{
@@ -279,8 +297,6 @@ class Editor : MainWindow
 	        dosya.write(editor.getBuffer().getText());
 
 	        baslik.YapDosyaAdresi(fcd.getFilename());
-
-	        writefln("-> FK -> Kaydedildi... %s", baslik.VerDosyaAdresi);
       	}
 
       	fcd.hide();  
@@ -322,7 +338,7 @@ class Editor : MainWindow
 		      	break;
 
 		    case "dosya.kaydet":
-                MenuDosyaKaydet();
+				MenuDosyaKaydet();
 		      	break;
 
 			case "dosya.farkliKaydet":
@@ -379,12 +395,26 @@ class Editor : MainWindow
 		TextIter iter = new TextIter();
 		textBuffer.getIterAtMark(iter, textBuffer.getInsert());
 		int lineNumber = iter.getLine(); 
-		*/
+		
 
 		TextIter iter = new TextIter();
 		textBuffer.getIterAtMark(iter, textBuffer.getInsert());
 
 		writefln("-> Satir : %s,   Sutun : %s", iter.getLine(), iter.getLineIndex());
+		*/
+	}
+
+	void OnMarkSet(TextIter iter, TextMark mark, TextBuffer textBuffer)
+	{
+		if (mark.getVisible())
+		{
+	 		int row = iter.getLine();
+  			int col = iter.getLineOffset();
+
+			string konumBilgi = format("Satir : %s, Sutun : %s", row + 1, col + 1);
+			durumCubugu.push(0, konumBilgi);
+		}
+		
 	}
 	/*======================================================= OLAY METODLARI SONU =============================*/	
 }

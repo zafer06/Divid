@@ -1,6 +1,6 @@
 module SayfaBaslik;
 
-import std.string;
+import std.string, std.path;
 
 import gtk.HBox, gtk.ToolButton, gtk.Notebook, gtk.Label, gtk.Widget, gtk.Image;
 
@@ -50,17 +50,9 @@ public class SayfaBaslik : HBox
 
 	private string DosyaAdiDuzenle(string dosyaAdresi)
 	{
-		string dosyaAdi = dosyaAdresi;
-
-		int sonAyracKonumu = lastIndexOf(dosyaAdresi, '\\');
-
-		if (sonAyracKonumu > 0)
-		{
-			dosyaAdi = dosyaAdresi[sonAyracKonumu + 1 .. dosyaAdresi.length];
-			dosyaAdi = leftJustify(dosyaAdi, 15, ' ');
-		}
-
-		return dosyaAdi;
+		string dosyaAdi = baseName(dosyaAdresi);
+		
+		return leftJustify(dosyaAdi, 15, ' ');
 	}
 
 	@property string VerDosyaAdresi() const
