@@ -3,27 +3,32 @@
 #
 # Compiler : Digital Mars D (v2.058)
 #
-# -L/SUBSYSTEM:WINDOWS - Konsol ekranını gizle
+
+
+INCL = -I/usr/include/i386-linux-gnu/dmd/gtkd/
+LIBS = -L-ldl -L-lgtkd -L-lgtkdsv
+
+
 
 all : divid
 
-divid : temizle Divid.o Editor.o SayfaBaslik.o
-	dmd -w -wi -of"divid" Divid.o Editor.o SayfaBaslik.o -L-ldl -L-lgtkd -L-lgtkdsv
+divid : temizle divid.o editor.o sayfaBaslik.o
+	dmd -w -wi -of"divid" divid.o editor.o sayfaBaslik.o $(LIBS)
 	
 
-SayfaBaslik.o : SayfaBaslik.d
-	dmd -c SayfaBaslik.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+sayfaBaslik.o : sayfaBaslik.d
+	dmd -c sayfaBaslik.d $(INCL)
 	
-Editor.o : Editor.d
-	dmd -c Editor.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+editor.o : editor.d
+	dmd -c editor.d $(INCL)
 
-Divid.o : Divid.d
-	dmd -c Divid.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+divid.o : divid.d
+	dmd -c divid.d $(INCL)
 
 temizle :
-	rm -f Divid.o
-	rm -f Editor.o
-	rm -f SayfaBaslik.o
-	rm -f Divid
+	rm -f divid.o
+	rm -f editor.o
+	rm -f sayfaBaslik.o
+	rm -f divid
 	@echo ------------------------
 	
