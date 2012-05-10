@@ -4,6 +4,17 @@ import std.string, std.path;
 
 import gtk.HBox, gtk.ToolButton, gtk.Notebook, gtk.Label, gtk.Widget, gtk.Image;
 
+version (windows)
+{
+	enum kapatResmiAdresi = "resim\\tab_kapat.png";
+}
+
+version (linux)
+{
+	enum kapatResmiAdresi = "resim/tab_kapat.png";
+}
+
+
 public class SayfaBaslik : HBox
 {
 	public ToolButton _kapat;
@@ -24,7 +35,7 @@ public class SayfaBaslik : HBox
 	private void BaslikHazirla(string etiket, Widget sayfa)
 	{
 		Image img = new Image();
-		img.setFromFile("resim\\tab_kapat.png");
+		img.setFromFile(kapatResmiAdresi);
 
 		_dosyaAdi = DosyaAdiDuzenle(etiket);
 		lblDosyaAdi = new Label("   " ~ _dosyaAdi ~ "     ");

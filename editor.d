@@ -1,4 +1,4 @@
-module Editor;
+module editor;
 
 import std.stdio;
 import std.file;
@@ -16,16 +16,20 @@ import gdk.Keysyms;
 
 import gtkc.gdktypes;
 
-import SayfaBaslik;
+import sayfaBaslik;
 
-version (Windows)
+version (windows)
 {
 	enum logoDosyaAdresi = "resim\\logo.png";
+	enum dilDosyaAdresi = "share\\gtksourceview-2.0\\language-specs";
+	enum stilDosyaAdresi = "share\\gtksourceview-2.0\\styles";
 }
 
-version (Linux)
+version (linux)
 {
 	enum logoDosyaAdresi = "resim/logo.png";	
+	enum dilDosyaAdresi = "share/gtksourceview-2.0/language-specs";
+	enum stilDosyaAdresi = "share/gtksourceview-2.0/styles";
 }
 
 class Editor : MainWindow
@@ -143,14 +147,14 @@ class Editor : MainWindow
 	    scWindow.add(metinEditoru);
 	   
 	    SourceLanguageManager slm = new SourceLanguageManager();
-	    slm.setSearchPath(["share\\gtksourceview-2.0\\language-specs"]);
+	    slm.setSearchPath([dilDosyaAdresi]);
 
 	    SourceLanguage dLang = slm.getLanguage("d");
 
 	    //writeln(slm.getSearchPath());
 
 		SourceStyleSchemeManager sssm = new SourceStyleSchemeManager();
-	    string[] styleSearchPaths = ["share\\gtksourceview-2.0\\styles"];
+	    string[] styleSearchPaths = [stilDosyaAdresi];
 	    sssm.setSearchPath(styleSearchPaths);
 
 	    SourceStyleScheme sema = sssm.getScheme("classic");

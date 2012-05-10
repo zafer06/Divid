@@ -1,5 +1,5 @@
 import gtk.Main;
-import Editor;
+import editor;
 
 void main(string[] args)
 {
