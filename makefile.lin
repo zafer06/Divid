@@ -1,0 +1,29 @@
+#
+# Divid D Editörü Makefile Dosyası
+#
+# Compiler : Digital Mars D (v2.058)
+#
+# -L/SUBSYSTEM:WINDOWS - Konsol ekranını gizle
+
+all : divid
+
+divid : temizle Divid.o Editor.o SayfaBaslik.o
+	dmd -w -wi -of"divid" Divid.o Editor.o SayfaBaslik.o -L-ldl -L-lgtkd -L-lgtkdsv
+	
+
+SayfaBaslik.o : SayfaBaslik.d
+	dmd -c SayfaBaslik.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+	
+Editor.o : Editor.d
+	dmd -c Editor.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+
+Divid.o : Divid.d
+	dmd -c Divid.d -I/usr/include/i386-linux-gnu/dmd/gtkd/
+
+temizle :
+	rm -f Divid.o
+	rm -f Editor.o
+	rm -f SayfaBaslik.o
+	rm -f Divid
+	@echo ------------------------
+	
