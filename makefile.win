@@ -5,25 +5,29 @@
 #
 # -L/SUBSYSTEM:WINDOWS - Konsol ekranını gizle
 
+INC = -IC:\DLang\gtkD\src -IC:\DLang\gtkD\srcsv
+LIB = -L+C:\DLang\gtkD\src\build\GtkD.lib
+
+OBJ = obj/divid.obj \
+	  obj/editor.obj \
+	  obj/sayfaBaslik.obj
+
 all : divid.exe
 
-divid.exe : temizle divid.obj editor.obj SayfaBaslik.obj
-	dmd -w -wi -of"divid" divid.obj editor.obj SayfaBaslik.obj -L+C:\DLang\gtkD\src\build\GtkD.lib
+divid.exe : temizle $(OBJ)
+	dmd -w -wi -of"divid" obj/divid.obj obj/editor.obj obj/sayfaBaslik.obj $(LIB) 
 	
-
-SayfaBaslik.obj : SayfaBaslik.d
-	dmd -c SayfaBaslik.d -IC:\DLang\gtkD\src -IC:\DLang\gtkD\srcsv
+obj/sayfaBaslik.obj : sayfaBaslik.d
+	dmd -c -ofobj/sayfaBaslik.obj sayfaBaslik.d $(INC)
 	
-Editor.obj : Editor.d
-	dmd -c Editor.d -IC:\DLang\gtkD\src -IC:\DLang\gtkD\srcsv
+obj/editor.obj : editor.d
+	dmd -c -ofobj/editor.obj editor.d $(INC)
 
-Divid.obj : Divid.d
-	dmd -c Divid.d -IC:\DLang\gtkD\src -IC:\DLang\gtkD\srcsv
+obj/divid.obj : divid.d
+	dmd -c -ofobj/divid.obj divid.d $(INC) 
 
 temizle :
-	del Divid.obj
-	del Editor.obj
-	del SayfaBaslik.obj
-	del Divid.exe
+	rmdir obj /s /q
+	del divid.exe
 	@echo ------------------------
 	

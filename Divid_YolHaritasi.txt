@@ -1,0 +1,29 @@
+Divid Yol Haritasý
+
+
+
+Yapýlacaklar
+==============================
++ Sayfa baþlýk metinleri için standart geniþlik saðlanacak (örn. 30 karakter gibi)
++ Dil desteði için ana menünün çalýþma zamanýnda bir dosyadan oluþturulmasý saðlanacak (menuConfig.json)
++ Programýn geniþlik, yükseklik, konum gibi bilgilerini saklayacak dosya oluþturulacak (dividConfig.json)
++ Dosya yükleme ve kaydetme iþlemleri eklenecek.
++ Yüklenen dosya tipine göre ilgili þablon yüklenecek
++ Program iconu eklenecek
++ Yardým dosyasý eklenecek (html þeklinde hazýrlanabilir)
+* Birleþen isimlendirmeleri düzeltilecek. (Notebook = defter, tab = sayfa)
+
++ Bulunan satýr, sütun ve Caps-Num Lock bilgilerinin gösterildiði durum çubuðu (status bar) eklenecek.
+
+
+
+Bilinen Hatalar
+==============================
+[TAMAM] x Aktif olmayan herhangi bir sayfanýn kapatma düðmesine basýldýðýnda aktif olan sayfa kapanýyor.
+x Satir ve sütün bilgisinde bir önceki veya sonraki numara geliyor.
+
+
+Planlanacaklar
+==============================
++ Basit bir þekilde, örneðin durum satýrýndaki ilgili bölüme týklayarak hatanýn olduðu satýr/sütuna ýþýnlanmak.
+

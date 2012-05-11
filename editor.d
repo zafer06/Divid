@@ -21,7 +21,7 @@ import sayfaBaslik;
 
 enum statusBarId = 1;
 
-version (windows)
+version (Windows)
 {
 	enum logoDosyaAdresi = "resim\\logo.png";
 	enum dilDosyaAdresi = "share\\gtksourceview-2.0\\language-specs";

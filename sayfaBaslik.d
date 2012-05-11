@@ -4,7 +4,7 @@ import std.string, std.path;
 
 import gtk.HBox, gtk.ToolButton, gtk.Notebook, gtk.Label, gtk.Widget, gtk.Image;
 
-version (windows)
+version (Windows)
 {
 	enum kapatResmiAdresi = "resim\\tab_kapat.png";
 }
