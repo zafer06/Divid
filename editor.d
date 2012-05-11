@@ -8,6 +8,7 @@ import std.string;
 import gtk.MainWindow, gtk.Main, gtk.Button, gtk.Label, gtk.VBox, gtk.HBox, gtk.Widget, gtk.ScrolledWindow, gtk.Notebook, gtk.Frame;
 import gtk.Image, gtk.RcStyle, gtk.Box, gtk.ToolButton, gtk.MenuBar, gtk.Menu, gtk.MenuItem, gtk.FileChooserDialog, gtk.TextBuffer;
 import gtk.AboutDialog, gtk.MessageDialog, gtk.TextIter, gtk.TextMark, gtk.FileFilter, gtk.Statusbar, gtk.TextView;
+import gtk.SeparatorMenuItem, gtk.Action, gtk.AccelGroup;
 
 import gsv.SourceView, gsv.SourceBuffer, gsv.SourceLanguage, gsv.SourceLanguageManager, gsv.SourceBuffer;
 import gsv.SourceStyleSchemeManager, gsv.SourceStyleScheme, gsv.SourceGutter, gtk.CellRendererText;
@@ -17,6 +18,8 @@ import gdk.Keysyms;
 import gtkc.gdktypes;
 
 import sayfaBaslik;
+
+enum statusBarId = 1;
 
 version (windows)
 {
@@ -62,7 +65,7 @@ class Editor : MainWindow
 		//sekme.setBorderWidth(10);
 
 		durumCubugu = new Statusbar();
-		durumCubugu.push(1, "First message");
+		durumCubugu.push(statusBarId, "Divid Metin Editörü");
 
 
 		VBox vboxAnaTablo = new VBox(false, 0);
@@ -123,7 +126,8 @@ class Editor : MainWindow
 	    metinEditoru.setInsertSpacesInsteadOfTabs(true);
 	    metinEditoru.setTabWidth(4);
 	    metinEditoru.setHighlightCurrentLine(true);
-		metinEditoru.modifyFont("Consolas", 10);
+		//metinEditoru.modifyFont("Consolas", 10);
+		metinEditoru.modifyFont("Monospace", 10);
 		metinEditoru.setLeftMargin(10);
 
 
@@ -186,12 +190,23 @@ class Editor : MainWindow
 	private MenuBar AnaMenuHazirla()
 	{
 		MenuBar menuBar = new MenuBar();
+		
+        AccelGroup accelGroup = new AccelGroup();
+        /*
+		Action action = new Action("dosya.ac", "_Aç", "tooltip", StockID.OPEN); //Should accept an StockID.
+        action.addOnActivate(&OnMenuKomutuCalistir);
+        action.setAccelGroup(accelGroup);
 
+        MenuItem menuItem = action.createMenuItem;
+        menuItem.addAccelerator("activate", accelGroup, 'o', GdkModifierType.CONTROL_MASK, GtkAccelFlags.VISIBLE); 
+        */
+        
 		Menu menu = menuBar.append("_Dosya");;
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Yeni", "dosya.yeni"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Yeni", "dosya.yeni", true, accelGroup, 'N'));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Aç", "dosya.ac"));
-		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Kaydet", "dosya.kaydet"));
+		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Kaydet", "dosya.kaydet", true, accelGroup, 'S'));
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Farklı Kaydet", "dosya.farkliKaydet"));
+		menu.append(new SeparatorMenuItem());
 		menu.append(new MenuItem(&OnMenuKomutuCalistir, "Çıkış", "dosya.cikis"));
 
 		menu = menuBar.append("_Düzen");
@@ -204,8 +219,6 @@ class Editor : MainWindow
 
 		return menuBar;
 	}
-
-
 
 	/*======================================================= MENU KOMUT METOTLARI BASI =============================*/
 	
@@ -227,7 +240,7 @@ class Editor : MainWindow
 	{
         string[] a = ["Aç", "İptal"];
 		ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
-      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.OPEN, a, r);
+      	FileChooserDialog fcd = new FileChooserDialog("Dosya Seç", this, FileChooserAction.OPEN, a, r);
 		
 		FileFilter filtreTum = new FileFilter();
 		filtreTum.setName("Tüm Dosyalar (*.*)");
@@ -286,7 +299,7 @@ class Editor : MainWindow
 	{
         string[] a = ["Kaydet", "İptal"];
 	    ResponseType[] r = [ResponseType.GTK_RESPONSE_OK, ResponseType.GTK_RESPONSE_CANCEL];
-      	FileChooserDialog fcd = new FileChooserDialog("File Chooser", this, FileChooserAction.SAVE, a, r);
+      	FileChooserDialog fcd = new FileChooserDialog("Dosya Seç", this, FileChooserAction.SAVE, a, r);
 
       	if (fcd.run() == ResponseType.GTK_RESPONSE_OK)
       	{
@@ -415,8 +428,8 @@ class Editor : MainWindow
 	 		int row = iter.getLine();
   			int col = iter.getLineOffset();
 
-			string konumBilgi = format("Satir : %s, Sutun : %s", row + 1, col + 1);
-			durumCubugu.push(0, konumBilgi);
+			string konumBilgi = format("Satir %s, Sütun %s", row + 1, col + 1);
+			durumCubugu.push(statusBarId, konumBilgi);
 		}
 		
 	}
