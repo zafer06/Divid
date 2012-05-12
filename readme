@@ -1,8 +1,8 @@
 Divid, D dilinde program geliştirenlerin kullanabileceği basit bir metin editörü. 
 
-Şimdilik çok iddialı olmayan Divid genel enlamda kod yazımı ve D dili ile ilgili bir takım kolaylıklar sağlıyor.
+Şimdilik çok iddialı olmayan Divid genel anlamda kod yazımı ve D dili ile ilgili bir takım kolaylıklar sağlıyor.
 
-* Sekmeli yapısı ile bir den çok dosya ile çalışabilme.
+* Sekmeli yapısı ile birden çok dosya ile çalışabilme.
 * D dosyaları için kod renklendirme.
 * İmlecin bulunduğu satır ve sütun bilgisini görebilme.
 
