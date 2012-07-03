@@ -4,31 +4,29 @@
 # Compiler : Digital Mars D (v2.058)
 #
 
+INC = -I/usr/include/i386-linux-gnu/dmd/gtkd/
+LIB = -L-ldl -L-lgtkd -L-lgtkdsv
 
-INCL = -I/usr/include/i386-linux-gnu/dmd/gtkd/
-LIBS = -L-ldl -L-lgtkd -L-lgtkdsv
-
-
+OBJ = obj/divid.o \
+	  obj/editor.o \
+	  obj/sayfaBaslik.o
 
 all : divid
 
-divid : temizle divid.o editor.o sayfaBaslik.o
-	dmd -w -wi -of"divid" divid.o editor.o sayfaBaslik.o $(LIBS)
+divid : temizle $(OBJ)
+	dmd -w -wi -of"divid" $(OBJ) $(LIB)
 	
-
-sayfaBaslik.o : sayfaBaslik.d
-	dmd -c sayfaBaslik.d $(INCL)
+obj/sayfaBaslik.o : sayfaBaslik.d
+	dmd -c -ofobj/sayfaBaslik.o sayfaBaslik.d $(INC)
 	
-editor.o : editor.d
-	dmd -c editor.d $(INCL)
+obj/editor.o : editor.d
+	dmd -c -ofobj/editor.o editor.d $(INC)
 
-divid.o : divid.d
-	dmd -c divid.d $(INCL)
+obj/divid.o : divid.d
+	dmd -c -ofobj/divid.o divid.d $(INC)
 
 temizle :
-	rm -f divid.o
-	rm -f editor.o
-	rm -f sayfaBaslik.o
+	rm -rf obj
 	rm -f divid
 	@echo ------------------------
 	
