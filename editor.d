@@ -30,7 +30,7 @@ version (Windows)
 
 version (linux)
 {
-	enum logoDosyaAdresi = "resim/logo.png";	
+	enum logoDosyaAdresi = "resim/logo.png";	 
 	enum dilDosyaAdresi = "share/gtksourceview-2.0/language-specs";
 	enum stilDosyaAdresi = "share/gtksourceview-2.0/styles";
 }
@@ -126,9 +126,11 @@ class Editor : MainWindow
 	    metinEditoru.setInsertSpacesInsteadOfTabs(true);
 	    metinEditoru.setTabWidth(4);
 	    metinEditoru.setHighlightCurrentLine(true);
-		//metinEditoru.modifyFont("Consolas", 10);
-		metinEditoru.modifyFont("Monospace", 10);
+		metinEditoru.modifyFont("Consolas", 10);
+		//metinEditoru.modifyFont("Monospace", 10);
 		metinEditoru.setLeftMargin(10);
+
+		metinEditoru.setSmartHomeEnd(GtkSourceSmartHomeEndType.ALWAYS);
 
 
 	    SourceBuffer sb = metinEditoru.getBuffer();
@@ -139,6 +141,7 @@ class Editor : MainWindow
 	    {
 	    	sb.setText(cast(string)std.file.read(dosyaAdi));
 		}
+
 
 	     // Imleci satır başına taşı
         TextIter iter = new TextIter();
@@ -165,8 +168,10 @@ class Editor : MainWindow
 	    sb.setStyleScheme(sema);
 
 		//writeln("test");
-		//metinEditoru.getGutter(GtkTextWindowType.RIGHT);
+
 		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
+		//SourceGutter gutter = metinEditoru.getGutter(GtkTextWindowType.LEFT);
+		
 
 		//CellRendererText render = new CellRendererText(); 
 		//gutter.insert(render, 20);
